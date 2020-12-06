@@ -29,7 +29,7 @@
                                                         
               SELECT ENTRADA ASSIGN DDENTRAD            
                      FILE STATUS IS WS-ENT-CODE.        
-              SELECT SALIDA ASSIGN DDSALIDA             
+              SELECT SALIDA ASSIGN DDSALIDA              
                      FILE STATUS IS WS-SAL-CODE.        
                                                         
         DATA DIVISION.                                  
