@@ -1,0 +1,103 @@
+# Cobol
+        IDENTIFICATION DIVISION.                                         
+         PROGRAM-ID PGMDB206.                                            
+       **********************************************                    
+       *                                            *                    
+       *  PROGRAMA PARA CONSULTAR NOMBRE, APELLIDO, *                    
+       *           SEXO Y FECHA DE NACIMIENTO       *                    
+       *                                            *                    
+       **********************************************                    
+        ENVIRONMENT DIVISION.                                            
+        INPUT-OUTPUT SECTION.                                            
+        FILE-CONTROL.                                                    
+        DATA DIVISION.                                                   
+        FILE SECTION.                                                    
+                                                                         
+       *****************************************************             
+        WORKING-STORAGE SECTION.                                         
+                                                                         
+        77  FILLER           PIC X(26) VALUE '* INICIO WORKING-STORAGE*'.
+                                                                         
+        77  NOT-FOUND        PIC S9(09) COMP VALUE  +100.                
+                                                                         
+        01  CLAVE.                                                       
+            03  REG-TIPDOC   PIC X(02) VALUE SPACES.                     
+            03  REG-NRODOC   PIC 9(11) VALUE ZEROS.                      
+                                                                         
+        77  FILLER           PIC X(26) VALUE '*DESCRIPCION SQLCA *'.     
+       *****************************************************             
+       * SQLCA COMMUNICATION AREA CON EL DB2               *             
+       *****************************************************             
+            EXEC SQL                                                     
+              INCLUDE SQLCA                                              
+            END-EXEC.                                                    
+                                                                         
+       *****************************************************             
+       * SQL PARA LA TABLA TB99CLIE                        *             
+       *****************************************************             
+            EXEC SQL                                                     
+             INCLUDE DB2CU2                                              
+            END-EXEC.                                                    
+                                                                         
+       *****************************************************             
+        77  FILLER          PIC X(26) VALUE '* FINAL  WORKING-STORAGE *'.
+                                                                         
+        PROCEDURE DIVISION.                                              
+       **************************************                            
+       *                                    *                            
+       *  CUERPO PRINCIPAL DEL PROGRAMA     *                            
+       *                                    *                            
+       **************************************           
+        MAIN-PROGRAM.                                   
+            PERFORM 1000-I-INICIO  THRU 1000-F-INICIO   
+            PERFORM 5000-I-PROCESO THRU 5000-F-PROCESO  
+            .                                           
+        F-MAIN-PROGRAM. GOBACK.                         
+                                                        
+       **************************************           
+       *                                    *           
+       *  CUERPO INICIO APERTURA FILES      *           
+       *                                    *           
+       **************************************           
+        1000-I-INICIO.                                  
+            ACCEPT  CLAVE          FROM SYSIN           
+            MOVE    REG-TIPDOC     TO   TIPDOC          
+            MOVE    REG-NRODOC     TO   NRODOC          
+            .                                           
+        1000-F-INICIO. EXIT.                            
+                                                        
+       **************************************           
+       *                                    *           
+       *  CUERPO PRINCIPAL DE PROCESOS      *           
+       *  LECTURA TABLA TBAL99CLIE          *           
+       *                                    *           
+       **************************************           
+        5000-I-PROCESO.                                 
+                 EXEC SQL                                               
+                      SELECT TIPDOC,NRODOC,NOMAPE,FECNAC,SEXO           
+                      INTO :DCLTB99CLIE.TIPDOC,                         
+                           :DCLTB99CLIE.NRODOC,                         
+                           :DCLTB99CLIE.NOMAPE,                         
+                           :DCLTB99CLIE.FECNAC,                         
+                           :DCLTB99CLIE.SEXO                            
+                      FROM ITPLZRY.TB99CLIE                             
+                      WHERE TIPDOC = :DCLTB99CLIE.TIPDOC                
+                      AND   NRODOC = :DCLTB99CLIE.NRODOC                
+                 END-EXEC.                                              
+                                                                        
+                 EVALUATE TRUE                                          
+                 WHEN SQLCODE  EQUAL NOT-FOUND                          
+                      DISPLAY 'REGISTRO NO ENCONTRADO'                  
+                 WHEN SQLCODE  EQUAL ZEROS                              
+                      DISPLAY 'TIPO Y NUMERO DE DOCUMENTO SOLICITADO: ' 
+                                         REG-TIPDOC ' ' REG-NRODOC      
+                      DISPLAY ' '                                       
+                      DISPLAY 'REGISTRO ENCONTRADO:   '                 
+                      DISPLAY '  NOMBRE Y APELLIDO  : ' NOMAPE          
+                      DISPLAY '  SEXO               : ' SEXO            
+                      DISPLAY '  FECHA DE NACIMIENTO: ' FECNAC          
+                 WHEN OTHER                                             
+                      DISPLAY 'ERROR NRO: ' SQLCODE                     
+                 END-EVALUATE                                           
+                 .             
+        5000-F-PROCESO. EXIT.              
